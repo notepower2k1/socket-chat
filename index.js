@@ -1,6 +1,6 @@
 const io = require('socket.io')(8900,{
     cors:{
-        origin:"http://localhost:3000",
+        origin:"*",
     }
 });
 
@@ -25,22 +25,44 @@ io.on("connection", (socket)=>{
     //take userID and socketID from user
     socket.on("addUser",userId=>{
         addUser(userId,socket.id);
-
         io.emit("getUsers",users);
     })
+
+    socket.on("joinConvRoom", data => {
+        socket.join(data);
+    });
+
     //send and get message
 
-
-    socket.on("sendMessage",({senderID,receiverID,text})=>{
-        const user = getUser(receiverID);
-        if (user) {
-            io.to(user.socketID).emit("getMessage",{
+    socket.on("sendMessage",({senderID, text, room})=>{
+        if (room) {
+            socket.to(room).emit("getMessage",{
                 senderID,
                 text,
             });
-        }
+        };
+    });
+
+    socket.on("sendMessNotification",({otherUserList})=>{
+   
+
+        otherUserList.forEach((userID) => {
+            const user = getUser(userID);
+            if (user) {
+                io.to(user.socketID).emit("getMessNotification",otherUserList)
+             }
+          
+        })
+       
       
     });
+    //send and get notification
+    socket.on("sendNotification",(noty) => {
+        const user = getUser(noty.recipient.id);
+        if (user) {
+            io.to(user.socketID).emit("getNotification",noty)
+        }
+    })
 
     //when disconnect
     socket.on("disconnect",()=>{
@@ -55,4 +77,3 @@ io.on("connection", (socket)=>{
         console.log('connection_error');
     });
 })
-
