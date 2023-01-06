@@ -1,4 +1,4 @@
-const io = require('socket.io')(8900,{
+const io = require('socket.io')("https://social-network-reactjs-hx9c.vercel.app",{
     cors:{
         origin:"*",
     }
